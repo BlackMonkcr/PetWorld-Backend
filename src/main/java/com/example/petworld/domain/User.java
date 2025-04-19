@@ -23,5 +23,5 @@ public class User {
     private String password; // En producción, asegurar que esté encriptada
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-    private List<Pet> Pets = new ArrayList<>();
+    private List<Pet> pets = new ArrayList<>();
 }

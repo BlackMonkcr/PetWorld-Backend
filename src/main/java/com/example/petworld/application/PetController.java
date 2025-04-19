@@ -3,10 +3,8 @@ package com.example.petworld.application;
 import com.example.petworld.dto.Interaction.InteractionResponseDTO;
 import com.example.petworld.dto.Pet.PetCreateDTO;
 import com.example.petworld.dto.Pet.PetResponseDTO;
-
-import com.example.petworld.dto.ResponseTemplate;
 import com.example.petworld.service.PetService;
-import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,19 +22,10 @@ public class PetController {
         this.petService = petService;
     }
 
-    // === Endpoints ===
-
-    // GET , POST, PUT, DELETE, PATCH
-
     @PostMapping
-    public ResponseEntity<ResponseTemplate<PetResponseDTO>> createPet(@Valid @RequestBody PetCreateDTO petCreateDTO) {
+    public ResponseEntity<PetResponseDTO> createPet(@RequestBody PetCreateDTO petCreateDTO) {
         PetResponseDTO createdPet = petService.createPet(petCreateDTO);
-        ResponseTemplate<PetResponseDTO> response = new ResponseTemplate<>();
-        response.setMessage("Pet created successfully");
-        response.setData(createdPet);
-        response.setStatus(HttpStatus.CREATED.value());
-        response.setError(null);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>(createdPet, HttpStatus.CREATED);
     }
 
     @GetMapping
