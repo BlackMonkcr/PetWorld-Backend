@@ -3,8 +3,11 @@ package com.example.petworld.application;
 import com.example.petworld.dto.Interaction.InteractionResponseDTO;
 import com.example.petworld.dto.Pet.PetCreateDTO;
 import com.example.petworld.dto.Pet.PetResponseDTO;
+import com.example.petworld.dto.ResponseDTO;
+import com.example.petworld.exception.ResourceNotFoundException;
 import com.example.petworld.service.PetService;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,9 +28,41 @@ public class PetController {
     }
 
     @PostMapping
-    public ResponseEntity<PetResponseDTO> createPet(@RequestBody PetCreateDTO petCreateDTO) {
-        PetResponseDTO createdPet = petService.createPet(petCreateDTO);
-        return new ResponseEntity<>(createdPet, HttpStatus.CREATED);
+    public ResponseEntity<ResponseDTO<PetResponseDTO>> createPet(@RequestBody PetCreateDTO petCreateDTO) {
+        try {
+            PetResponseDTO createdPet = petService.createPet(petCreateDTO);
+            ResponseDTO<PetResponseDTO> response = new ResponseDTO<>();
+            response.setData(createdPet);
+            response.setMessage("Pet created successfully");
+            response.setStatus(HttpStatus.CREATED.value());
+            response.setError(null);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            ResponseDTO<PetResponseDTO> response = new ResponseDTO<>();
+            response.setData(null);
+            response.setMessage("Invalid input data");
+            response.setStatus(HttpStatus.BAD_REQUEST.value());
+            response.setError(e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } catch (ResourceNotFoundException e) {
+            log.error("Resource not found: {}", e.getMessage());
+            ResponseDTO<PetResponseDTO> response = new ResponseDTO<>();
+            response.setData(null);
+            response.setMessage("Resource Not Found");
+            response.setStatus(HttpStatus.NOT_FOUND.value());
+            response.setError(e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+        catch (Exception e) {
+            log.error("Error creating pet: {}", e.getMessage());
+            ResponseDTO<PetResponseDTO> response = new ResponseDTO<>();
+            response.setData(null);
+            response.setMessage("Internal Server Error");
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            response.setError(e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping

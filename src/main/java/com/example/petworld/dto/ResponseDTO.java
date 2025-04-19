@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ResponseTemplate<T> {
+public class ResponseDTO<T> {
     private int status;
     private String message;
     private String error;

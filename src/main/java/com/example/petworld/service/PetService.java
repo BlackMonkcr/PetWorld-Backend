@@ -45,7 +45,18 @@ public class PetService {
     public PetResponseDTO createPet(PetCreateDTO petCreateDTO) {
         // Obtener el usuario actual (esto sería con seguridad implementada)
         // Para este ejemplo asumimos que obtenemos el userId desde el token o sesión
-        Long userId = getCurrentUserId();
+
+        if (petCreateDTO.getName() == null || petCreateDTO.getName().isEmpty()) {
+            throw new IllegalArgumentException("El nombre de la mascota no puede estar vacío");
+        } else if (petCreateDTO.getType() == null || petCreateDTO.getType().isEmpty()) {
+            throw new IllegalArgumentException("El tipo de mascota no puede estar vacío");
+        } else if (petCreateDTO.getImageUrl() == null || petCreateDTO.getImageUrl().isEmpty()) {
+            throw new IllegalArgumentException("La URL de la imagen no puede estar vacía");
+        } else if (petCreateDTO.getDescription().length() < 10 || petCreateDTO.getDescription().length() > 500) {
+            throw new IllegalArgumentException("La descripción debe tener entre 10 y 500 caracteres");
+        }
+
+        Long userId = getCurrentUserId(); // Usuario actual
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
@@ -89,6 +100,16 @@ public class PetService {
             pets = petRepository.findAll();
         }
 
+        // Pets.stream() -> Stream<Pet>
+        // .map(this::convertToResponseDTO) -> Stream<PetResponseDTO>
+        // .collect(Collectors.toList()) -> List<PetResponseDTO>
+        /*
+        * List<PetResponseDTO> petResponseDTOs = new ArrayList<>();
+        * for (Pet pet : pets) {
+        *   petResponseDTOs.add(convertToResponseDTO(pet));
+        * }
+        * return petResponseDTOs;
+        * */
         return pets.stream()
                 .map(this::convertToResponseDTO)
                 .collect(Collectors.toList());
