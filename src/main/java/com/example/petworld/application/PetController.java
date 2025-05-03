@@ -38,7 +38,7 @@ public class PetController {
             response.setError(null);
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-            log.error(e.getMessage());
+            log.error(e.getMessage()); // Print the error message to the log
             ResponseDTO<PetResponseDTO> response = new ResponseDTO<>();
             response.setData(null);
             response.setMessage("Invalid input data");
