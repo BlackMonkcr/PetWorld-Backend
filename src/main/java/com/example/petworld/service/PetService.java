@@ -8,11 +8,13 @@ import com.example.petworld.dto.Pet.PetCreateDTO;
 import com.example.petworld.dto.Pet.PetResponseDTO;
 import com.example.petworld.dto.Pet.PetSimpleDTO;
 import com.example.petworld.dto.User.UserSimpleDTO;
+import com.example.petworld.events.PetCreatedEvent;
 import com.example.petworld.infrastructure.PetRepository;
 import com.example.petworld.infrastructure.InteractionRepository;
 import com.example.petworld.infrastructure.UserRepository;
 import com.example.petworld.exception.ResourceNotFoundException;
-
+import org.springframework.context.ApplicationEventPublisher;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,19 +23,23 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class PetService {
     private final PetRepository petRepository;
     private final UserRepository userRepository;
     private final InteractionRepository interactionRepository;
+    private final ApplicationEventPublisher eventPublisher; // Agregamos el publicador de eventos
 
     @Autowired
     public PetService(PetRepository petRepository,
                       UserRepository userRepository,
-                      InteractionRepository interactionRepository) {
+                      InteractionRepository interactionRepository,
+                      ApplicationEventPublisher eventPublisher) {
         this.petRepository = petRepository;
         this.userRepository = userRepository;
         this.interactionRepository = interactionRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -77,6 +83,14 @@ public class PetService {
         pet.setOwner(owner);
 
         Pet savedPet = petRepository.save(pet);
+
+        log.info("Publicando evento para nueva mascota: {}", savedPet.getName());
+        eventPublisher.publishEvent(new PetCreatedEvent(
+                this,
+                savedPet.getId(),
+                savedPet.getName(),
+                savedPet.getType()
+        ));
 
         return convertToResponseDTO(savedPet);
     }
