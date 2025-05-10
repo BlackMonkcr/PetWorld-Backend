@@ -4,6 +4,7 @@ import com.example.petworld.domain.Pet;
 import com.example.petworld.domain.User;
 import com.example.petworld.dto.Pet.PetCreateDTO;
 import com.example.petworld.dto.Pet.PetResponseDTO;
+import com.example.petworld.events.PetCreatedEvent;
 import com.example.petworld.exception.ResourceNotFoundException;
 import com.example.petworld.infrastructure.InteractionRepository;
 import com.example.petworld.infrastructure.PetRepository;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -50,6 +52,9 @@ public class PetServiceTest {
     @Mock
     private InteractionRepository interactionRepository;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+    
     // The service we're testing, with mocks injected
     @InjectMocks
     private PetService petService;
@@ -95,18 +100,21 @@ public class PetServiceTest {
         // Arrange: Configure mocks to return our test data
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(testUser));
         when(petRepository.save(any(Pet.class))).thenReturn(testPet);
-
+        // No necesitamos configurar comportamiento para eventPublisher pues doNothing es el comportamiento por defecto
+        
         // Act: Call the method being tested
-        PetResponseDTO result = petService.createPet(petCreateDTO);
-
+        PetResponseDTO result = petService.createPet(petCreateDTO, testUser.getId());
+    
         // Assert: Verify the results
         assertNotNull(result);
         assertEquals("Fluffy", result.getName());
         assertEquals("Cat", result.getType());
-
+    
         // Verify the repository methods were called
         verify(userRepository).findById(anyLong());
         verify(petRepository).save(any(Pet.class));
+        // Verificamos que el evento fue publicado
+        verify(eventPublisher).publishEvent(any(PetCreatedEvent.class));
     }
 
     @Test
@@ -116,7 +124,7 @@ public class PetServiceTest {
 
         // Act & Assert: Call the method and verify it throws the expected exception
         Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            petService.createPet(petCreateDTO);
+            petService.createPet(petCreateDTO, testUser.getId());
         });
 
         assertTrue(exception.getMessage().contains("Usuario no encontrado"));

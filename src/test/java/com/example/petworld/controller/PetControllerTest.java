@@ -5,6 +5,7 @@ import com.example.petworld.dto.Pet.PetCreateDTO;
 import com.example.petworld.dto.Pet.PetResponseDTO;
 import com.example.petworld.dto.User.UserSimpleDTO;
 import com.example.petworld.exception.ResourceNotFoundException;
+import com.example.petworld.security.UserDetailsImpl;
 import com.example.petworld.service.PetService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,6 +35,9 @@ public class PetControllerTest {
 
     @Mock
     private PetService petService;
+    
+    @Mock
+    private UserDetailsImpl userDetails;
 
     @InjectMocks
     private PetController petController;
@@ -66,38 +71,41 @@ public class PetControllerTest {
         owner.setId(1L);
         owner.setUsername("testUser");
         petResponseDTO.setOwner(owner);
+        
+        // Configure mock user details
+        when(userDetails.getId()).thenReturn(1L);
     }
 
     @Test
     public void testCreatePet_Success() {
         // Arrange: Configure mock to return test data
-        when(petService.createPet(any(PetCreateDTO.class))).thenReturn(petResponseDTO);
+        when(petService.createPet(any(PetCreateDTO.class), 1L)).thenReturn(petResponseDTO);
 
         // Act: Call the controller method
-        ResponseEntity<?> response = petController.createPet(petCreateDTO);
+        ResponseEntity<?> response = petController.createPet(petCreateDTO, userDetails);
 
         // Assert: Verify the response
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
 
         // Verify service method was called
-        verify(petService).createPet(any(PetCreateDTO.class));
+        verify(petService).createPet(any(PetCreateDTO.class), 1L);
     }
 
     @Test
     public void testCreatePet_ServiceThrowsException() {
         // Arrange: Make service throw an exception
-        when(petService.createPet(any(PetCreateDTO.class)))
+        when(petService.createPet(any(PetCreateDTO.class), 1L))
                 .thenThrow(new IllegalArgumentException("Invalid input"));
 
         // Act: Call the controller method
-        ResponseEntity<?> response = petController.createPet(petCreateDTO);
+        ResponseEntity<?> response = petController.createPet(petCreateDTO, userDetails);
 
         // Assert: Verify error handling
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 
         // Verify service method was called
-        verify(petService).createPet(any(PetCreateDTO.class));
+        verify(petService).createPet(any(PetCreateDTO.class), 1L);
     }
 
     @Test

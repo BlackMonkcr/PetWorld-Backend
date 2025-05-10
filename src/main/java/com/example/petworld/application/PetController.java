@@ -5,6 +5,7 @@ import com.example.petworld.dto.Pet.PetCreateDTO;
 import com.example.petworld.dto.Pet.PetResponseDTO;
 import com.example.petworld.dto.ResponseDTO;
 import com.example.petworld.exception.ResourceNotFoundException;
+import com.example.petworld.security.UserDetailsImpl;
 import com.example.petworld.service.PetService;
 
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,9 +30,12 @@ public class PetController {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseDTO<PetResponseDTO>> createPet(@RequestBody PetCreateDTO petCreateDTO) {
+    public ResponseEntity<ResponseDTO<PetResponseDTO>> createPet(
+        @RequestBody PetCreateDTO petCreateDTO,
+        @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
         try {
-            PetResponseDTO createdPet = petService.createPet(petCreateDTO);
+            PetResponseDTO createdPet = petService.createPet(petCreateDTO, userDetails.getId());
             ResponseDTO<PetResponseDTO> response = new ResponseDTO<>();
             response.setData(createdPet);
             response.setMessage("Pet created successfully");

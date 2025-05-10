@@ -48,7 +48,7 @@ public class PetService {
      * @return La mascota creada
      */
     @Transactional
-    public PetResponseDTO createPet(PetCreateDTO petCreateDTO) {
+    public PetResponseDTO createPet(PetCreateDTO petCreateDTO, Long userId) {
         // Obtener el usuario actual (esto sería con seguridad implementada)
         // Para este ejemplo asumimos que obtenemos el userId desde el token o sesión
 
@@ -62,7 +62,6 @@ public class PetService {
             throw new IllegalArgumentException("La descripción debe tener entre 10 y 500 caracteres");
         }
 
-        Long userId = getCurrentUserId(); // Usuario actual
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
